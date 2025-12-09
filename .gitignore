@@ -15,10 +15,10 @@ data_processed/
 *.tar.gz
 
 # Outputs
-exports/
+# exports/
 logs/
 checkpoints/
-*.tflite
+# *.tflite
 *.keras
 *.h5
 
@@ -27,4 +27,4 @@ checkpoints/
 Thumbs.db
 /data
 /data_processed
-/exports
+# /exports

@@ -53,7 +53,7 @@ LeafModel/
 └── requirements.txt     # Dependencies
 ```
 
-## 📊 Data Version Control (DVC)
+## Data Version Control (DVC)
 We recommend initializing DVC to track the `data_processed` folder:
 ```bash
 dvc init

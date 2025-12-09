@@ -1,12 +1,12 @@
-# 🌱 BeejX LeafModel (MobileNetV2)
+# + BeejX LeafModel (MobileNetV2)
 
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange.svg)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.19.0-orange.svg)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 > **Professional Edge-AI Solution for Crop Disease Recognition (Offline & Mobile-First).**
 
-## 🚀 Quick Start (5 Minutes)
+##  Quick Start (5 Minutes)
 
 ### 1. Setup
 ```bash
@@ -28,18 +28,18 @@ python src/train.py
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 We use **MobileNetV2** (Quantized) for < 4MB model size, enabling real-time inference on low-end Android devices in rural areas.
 *   **[Read Full Architecture Docs](docs/ARCHITECTURE.md)** regarding Input Size, Alpha, and Hyperparameters.
 *   **[Read Mock Pitching Suggestion](SUGGESTIONS.md)** for Hackathon Judges.
 
-## 🛠️ Tech Stack
+## Tech Stack
 *   **Core**: TensorFlow 2.x, Keras
 *   **Pipeline**: Custom `BeejXDataLoader` with Real-time Augmentation (Rotation/Zoom).
 *   **Optimization**: Post-training Quantization (Float32 -> Int8).
 *   **Handling Imbalance**: Algorithmic Class Weighting (sklearn).
 
-## 📂 Project Structure
+## Project Structure
 ```
 LeafModel/
 ├── configs/             # YAML configuration (Hyperparameters)
@@ -53,7 +53,7 @@ LeafModel/
 └── requirements.txt     # Dependencies
 ```
 
-## 📊 Data Version Control (DVC)
+## Data Version Control (DVC)
 We recommend initializing DVC to track the `data_processed` folder:
 ```bash
 dvc init

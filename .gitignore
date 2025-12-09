@@ -1,0 +1,30 @@
+# Bytes
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# Data (Too large for git)
+data/
+data_processed/
+*.zip
+*.tar.gz
+
+# Outputs
+exports/
+logs/
+checkpoints/
+*.tflite
+*.keras
+*.h5
+
+# OS
+.DS_Store
+Thumbs.db
+/data
+/data_processed
+/exports

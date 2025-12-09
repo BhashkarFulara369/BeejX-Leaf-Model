@@ -1,0 +1,7 @@
+tensorflow
+datasets
+numpy
+scikit-learn
+pillow
+pyyaml
+dvc

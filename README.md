@@ -1,4 +1,4 @@
-# + BeejX LeafModel (MobileNetV2)
+# BeejX LeafModel (MobileNetV2)
 
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.19.0-orange.svg)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)

@@ -1,6 +1,6 @@
 # 🌱 BeejX LeafModel (MobileNetV2)
 
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange.svg)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.19.0-orange.svg)
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 

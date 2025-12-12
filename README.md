@@ -30,32 +30,21 @@ python src/train.py
 ---
 
 ## Architecture
-We use **MobileNetV2** (Quantized) for < 4MB model size, enabling real-time inference on low-end Android devices in rural areas.
+We use **MobileNetV2** (Quantized) for < 2.5MB model size, enabling real-time inference on low-end Android devices in rural areas.
 *   **[Read Full Architecture Docs](docs/ARCHITECTURE.md)** regarding Input Size, Alpha, and Hyperparameters.
-*   **[Read Mock Pitching Suggestion](SUGGESTIONS.md)** for Hackathon Judges.
+
 
 ## Tech Stack
-*   **Core**: TensorFlow 2.x, Keras
+*   **Core**: TensorFlow 2.19.0, Keras
 *   **Pipeline**: Custom `BeejXDataLoader` with Real-time Augmentation (Rotation/Zoom).
 *   **Optimization**: Post-training Quantization (Float32 -> Int8).
 *   **Handling Imbalance**: Algorithmic Class Weighting (sklearn).
 
-## Project Structure
-```
-LeafModel/
-├── configs/             # YAML configuration (Hyperparameters)
-├── data_processed/      # (Generated) Clean Training Data
-├── docs/                # Architecture & Dataset documentation
-├── exports/             # Final TFLite models
-├── src/
-│   ├── models/          # MobileNetV2 definition
-│   ├── scripts/         # Data cleaning & loading utilities
-│   └── train.py         # Main training loop
-└── requirements.txt     # Dependencies
-```
 
 ## Data Version Control (DVC)
-We recommend initializing DVC to track the `data_processed` folder:
+
+Used data version control ---
+`data_processed` folder:
 ```bash
 dvc init
 dvc add data_processed

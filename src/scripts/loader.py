@@ -4,11 +4,22 @@ import glob
 from typing import Tuple, List, Optional
 import yaml
 
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 def load_config(config_path: str = "configs/config.yaml") -> dict:
-    with open(config_path, 'r') as f:
-        return yaml.safe_load(f)
+    try:
+        with open(config_path, 'r') as f:
+            return yaml.safe_load(f)
+    except FileNotFoundError:
+        logger.error(f"Config file not found at {config_path}")
+        raise
 
 class BeejXDataLoader:
+    """
+    Handles data loading and augmentation for the BeejX Leaf Model.
+    """
     def __init__(self, config: dict):
         self.config = config
         self.img_size = tuple(config['model']['input_shape'][:2])
@@ -19,27 +30,25 @@ class BeejXDataLoader:
             tf.keras.layers.RandomFlip("horizontal"),
             tf.keras.layers.RandomRotation(config['augmentation']['rotation_range']),
             tf.keras.layers.RandomZoom(config['augmentation']['zoom_range']),
+            tf.keras.layers.RandomBrightness(0.2),
+            tf.keras.layers.RandomContrast(0.2),
         ])
 
     def get_local_dataset(self) -> Optional[tf.data.Dataset]:
         """Loads local dataset from data/raw folder with Augmentation."""
         data_dir = self.config['data']['local_data_dir']
-        # Handle relative path from project root if running from root
+        
         if not os.path.exists(data_dir):
-            # Try finding it relative to project root if logic fails
-            print(f"Warning: {data_dir} not found directly.")
-            # Assume we are in src/ or similar, try to go up? 
-            # Actually, config uses "./data_processed" which works if running from LeafModel root.
+            logger.error(f"Data directory not found: {data_dir}")
             return None
 
-        # Auto-detect classes
         classes = sorted([d for d in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, d))])
         if not classes:
-            print("No class folders found in data dir.")
+            logger.error(f"No class folders found in {data_dir}")
             return None
             
-        print(f"Auto-detected {len(classes)} classes: {classes}")
-        print(f"Loading data from {data_dir}...")
+        logger.info(f"detected {len(classes)} classes: {classes}")
+        logger.info(f"Loading data from {data_dir}...")
         
         # Load Training Data
         train_ds = tf.keras.utils.image_dataset_from_directory(
@@ -73,9 +82,11 @@ class BeejXDataLoader:
         train_ds = train_ds.map(lambda x, y: (self.augment_layers(x, training=True), y), 
                                 num_parallel_calls=tf.data.AUTOTUNE)
         
-        # Normalize both
-        train_ds = train_ds.map(lambda x, y: (x/255.0, y), num_parallel_calls=tf.data.AUTOTUNE)
-        val_ds = val_ds.map(lambda x, y: (x/255.0, y), num_parallel_calls=tf.data.AUTOTUNE)
+        
+        # MobileNetV2 Preprocessing
+        preprocess_input = tf.keras.applications.mobilenet_v2.preprocess_input
+        train_ds = train_ds.map(lambda x, y: (preprocess_input(x), y), num_parallel_calls=tf.data.AUTOTUNE)
+        val_ds = val_ds.map(lambda x, y: (preprocess_input(x), y), num_parallel_calls=tf.data.AUTOTUNE)
 
         # Prefetch for performance
         train_ds = train_ds.prefetch(buffer_size=tf.data.AUTOTUNE)

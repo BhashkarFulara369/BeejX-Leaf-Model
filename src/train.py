@@ -1,122 +1,155 @@
 import os
 import tensorflow as tf
 import numpy as np
-import yaml
+from sklearn.utils import class_weight
 from scripts.loader import BeejXDataLoader
 from models.mobilenet import build_mobilenet_model
+from utils.logger import get_logger
 
-def load_config(path='configs/config.yaml'):
-    with open(path, 'r') as f:
-        return yaml.safe_load(f)
+logger = get_logger(__name__)
 
-def main():
-    print("="*50)
-    print("BeejX Leaf Disease Model - Professional Training Pipeline")
-    print("="*50)
-
-    # 1. Load Configuration
-    config = load_config()
-    print("Configuration loaded.")
-
-    # 2. Prepare Data
-    loader = BeejXDataLoader(config)
-    datasets = loader.get_combined_dataset()
-
-    if datasets is None:
-        print("\n[ERROR] No training data found!")
-        print("Please add images to: c:/Project/CDD/LeafModel/data/raw/")
-        print("Structure: data/raw/CropName/DiseaseName/image.jpg")
-        return
-        
-    train_ds, val_ds, class_names = datasets # Unpack tuple
-    # class_names = train_ds.class_names # REMOVED: Caused AttributeError on PrefetchDataset
-    num_classes = len(class_names)
-    print(f"Found {num_classes} classes: {class_names}")
-
-    # 3. Build Model
-    model = build_mobilenet_model(num_classes, config)
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=config['training']['learning_rate']),
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy']
-    )
-    model.summary()
-
-    # 4.1 Calculate Class Weights (Professional Handling of Imbalance)
-    print("\nCalculating class weights to balance dataset...")
-    
+def get_class_weights(train_ds):
+    """Computes class weights to handle data imbalance."""
+    logger.info("Computing class weights...")
     y_train = []
-    # Iterate only a subset or full dataset if small (Local is usually small)
-    print("Scanning for labels (this might take a moment)...")
     try:
-        # We unbatch to get exact labels. 
-        # CAUTION: If dataset is huge, this is slow. For <10GB local data, it's fine.
+        # Iterate over the dataset to collect labels
         for _, labels in train_ds.unbatch():
             y_train.append(labels.numpy())
             
-        from sklearn.utils import class_weight
         y_train = np.array(y_train)
         weights = class_weight.compute_class_weight(
             class_weight='balanced',
             classes=np.unique(y_train),
             y=y_train
         )
-        class_weights = dict(enumerate(weights))
-        print(f"Computed Class Weights: {class_weights}")
+        return dict(enumerate(weights))
     except Exception as e:
-        print(f"[WARNING] Could not compute class weights: {e}")
-        print("Falling back to equal weights.")
-        class_weights = None
+        logger.warning(f"Could not compute class weights: {e}. Using equal weights.")
+        return None
 
-    # 4. Train
-    print("\nStarting training...")
-    
-    # Define Callbacks
-    checkpoint_cb = tf.keras.callbacks.ModelCheckpoint(
-        os.path.join(config['paths']['output_dir'], "best_model.keras"),
-        save_best_only=True,
-        monitor='val_accuracy'
-    )
-    early_stopping_cb = tf.keras.callbacks.EarlyStopping(
-        monitor='val_loss',
-        patience=3,
-        restore_best_weights=True
-    )
-    
-    epochs = config['training']['epochs']
+def train_initial_model(model, train_ds, val_ds, class_weights, config, callbacks):
+    """Trains the base model."""
+    logger.info("Starting initial training...")
     history = model.fit(
         train_ds, 
-        epochs=epochs, 
+        epochs=config['training']['epochs'], 
         validation_data=val_ds, 
         class_weight=class_weights,
-        callbacks=[checkpoint_cb, early_stopping_cb]
+        callbacks=callbacks
     )
+    return history
 
-    # 5. Export to TFLite
-    print("\nExporting to TFLite...")
-    export_dir = config['paths']['output_dir']
-    os.makedirs(export_dir, exist_ok=True)
+def fine_tune_model(model, train_ds, val_ds, class_weights, config, callbacks, initial_epoch):
+    """Fine-tunes the model by unfreezing top layers."""
+    if not config['fine_tuning']['enabled']:
+        return None
+
+    logger.info("Starting fine-tuning...")
+    
+    # Unfreeze the base model
+    base_model = model.layers[1] 
+    base_model.trainable = True
+    
+    # Freeze early layers
+    unfreeze_from = config['fine_tuning']['unfreeze_from_layer']
+    for layer in base_model.layers[:unfreeze_from]:
+        layer.trainable = False
+        
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=config['fine_tuning']['learning_rate']),
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy']
+    )
+    
+    total_epochs = config['training']['epochs'] + config['fine_tuning']['epochs']
+    
+    history_fine = model.fit(
+        train_ds,
+        epochs=total_epochs,
+        initial_epoch=initial_epoch,
+        validation_data=val_ds,
+        class_weight=class_weights,
+        callbacks=callbacks
+    )
+    return history_fine
+
+def export_model(model, class_names, output_dir):
+    """Exports the model to TFLite format."""
+    logger.info(f"Exporting model to {output_dir}...")
+    os.makedirs(output_dir, exist_ok=True)
     
     # Save generic SavedModel
-    model.save(os.path.join(export_dir, "saved_model"))
+    model.save(os.path.join(output_dir, "saved_model"))
 
-    # Convert with Quantization
+    # Convert to TFLite with Quantization
     converter = tf.lite.TFLiteConverter.from_keras_model(model)
-    converter.optimizations = [tf.lite.Optimize.DEFAULT] # Quantization
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
     tflite_model = converter.convert()
 
-    tflite_path = os.path.join(export_dir, "model.tflite")
+    tflite_path = os.path.join(output_dir, "model.tflite")
     with open(tflite_path, "wb") as f:
         f.write(tflite_model)
     
     # Save Labels
-    with open(os.path.join(export_dir, "labels.txt"), "w") as f:
+    with open(os.path.join(output_dir, "labels.txt"), "w") as f:
         for name in class_names:
             f.write(name + "\n")
 
-    print(f"\nSUCCESS! Model saved to: {tflite_path}")
-    print(f"Labels saved to: {os.path.join(export_dir, 'labels.txt')}")
-    print("Copy 'model.tflite' and 'labels.txt' to your Android project's assets folder.")
+    logger.info(f"Model exported successfully: {tflite_path}")
+
+def main():
+    logger.info("Initializing Training Pipeline")
+    
+    from scripts.loader import load_config
+    config = load_config()
+    
+    # Prepare Data
+    loader = BeejXDataLoader(config)
+    datasets = loader.get_combined_dataset()
+    
+    if datasets is None:
+        logger.error("Training data not found. Please check data/raw directory.")
+        return
+        
+    train_ds, val_ds, class_names = datasets
+    num_classes = len(class_names)
+    logger.info(f"Classes found: {num_classes}")
+
+    # Calculate Weights
+    class_weights = get_class_weights(train_ds)
+
+    # Build Model
+    model = build_mobilenet_model(num_classes, config)
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=config['training']['learning_rate']),
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy']
+    )
+    model.summary(print_fn=logger.info)
+
+    # Callbacks
+    callbacks = [
+        tf.keras.callbacks.ModelCheckpoint(
+            os.path.join(config['paths']['output_dir'], "best_model.keras"),
+            save_best_only=True,
+            monitor='val_accuracy'
+        ),
+        tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss',
+            patience=3,
+            restore_best_weights=True
+        )
+    ]
+
+    # Train
+    history = train_initial_model(model, train_ds, val_ds, class_weights, config, callbacks)
+    
+    # Fine-tune
+    fine_tune_model(model, train_ds, val_ds, class_weights, config, callbacks, history.epoch[-1])
+
+    # Export
+    export_model(model, class_names, config['paths']['output_dir'])
 
 if __name__ == "__main__":
     main()

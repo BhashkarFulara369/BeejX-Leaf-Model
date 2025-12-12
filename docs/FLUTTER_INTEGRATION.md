@@ -1,4 +1,4 @@
-# 📱 Flutter TFLite Integration Guide
+# Flutter TFLite Integration Guide
 
 This guide explains how to integrate your `model.tflite` into your BeejX Flutter App and handle English-to-Hindi translation professionally.
 

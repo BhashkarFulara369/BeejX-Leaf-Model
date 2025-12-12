@@ -4,9 +4,10 @@
 ![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-> **Professional Edge-AI Solution for Crop Disease Recognition (Offline & Mobile-First).**
+> **Edge-AI Solution for Crop Disease Recognition (Offline & Mobile-First).**
 
-##  Quick Start (5 Minutes)
+## Quick Start
+
 
 ### 1. Setup
 ```bash

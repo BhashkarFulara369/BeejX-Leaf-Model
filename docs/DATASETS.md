@@ -48,7 +48,7 @@ The previous direct links may have expired. Below are the **Verified Dataset Tit
 seasme leaf dataset link -- https://data.mendeley.com/datasets/c64jt5gkzm/1
 ---
 
-## 🛠 YOUR NEXT STEPS (Workflow)
+## YOUR NEXT STEPS (Workflow)
 
 1.  **Download**: Search and download the datasets above (they will be `.zip` files).
 2.  **Extract**: Unzip them.

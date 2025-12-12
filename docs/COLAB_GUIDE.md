@@ -1,4 +1,4 @@
-# ☁️ Google Colab Training Guide (Zero-Error Method)
+# Google Colab Training Guide (Zero-Error Method)
 
 Follow these steps exactly to train your model on Google's Free GPU.
 
@@ -20,7 +20,7 @@ Follow these steps exactly to train your model on Google's Free GPU.
 
 ## Phase 3: Upload Data
 ### Option A: Direct Upload (Best for < 1GB)
-1.  On the Left Sidebar, click the **Folder Icon 📁**.
+1.  On the Left Sidebar, click the **Folder Icon**.
 2.  Drag and drop your `project_upload.zip`.
 
 ### Option B: Google Drive (Required for 6GB!)
@@ -43,13 +43,14 @@ Follow these steps exactly to train your model on Google's Free GPU.
     *   Watch the `Epoch` progress.
     *   Wait for "Exporting to TFLite..." success message.
 
-## Phase 5: Download (The Fruit of your Labor)
+## Phase 5: Download
+
 1.  The last cell will trigger a download for `model.tflite`.
 2.  If chrome blocks it, check the `exports` folder in the sidebar and Right Click > Download manually.
 
 ---
 
-## ⚠️ Common "Gotchas" (Pro Tips)
+## Common "Gotchas" (Pro Tips)
 *   **"FileNotFoundError"**: You probably didn't upload the zip, or you are in the wrong folder. Run `!ls` to check where you are.
 *   **"Disconnecting..."**: Colab kills the session if you close the tab. Keep the tab open!
 *   **"Out of Memory"**: If this happens, open `configs/config.yaml` and change `batch_size: 32` to `16`.

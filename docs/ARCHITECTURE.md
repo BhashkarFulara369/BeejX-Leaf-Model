@@ -1,18 +1,17 @@
-# 🏗️ Model Architecture & Configuration Explained
+# Model Architecture & Configuration Explained
 
 This document explains **WHY** we chose specific settings in `config.yaml`. Use this information to answer judges' technical questions.
 
 ## 1. Why MobileNetV2?
-We chose **MobileNetV2** over other popular models (like ResNet, EfficientNet, or VGG).
+We chose **MobileNetV2** for its efficiency on mobile devices compared to larger models.
 
-| Model | Size (MB) | Speed (FPS on Phone) | Accuracy | Best Use |
+| Model | Size (MB) | Speed (FPS) | Accuracy | Best Use |
 | :--- | :--- | :--- | :--- | :--- |
-| **MobileNetV2** | **14 MB** | **Real-time (30+)** | **High** | **Mobile Offline Apps** |
-| ResNet50 | 98 MB | Slow (5-10) | Very High | Cloud Servers |
-| VGG16 | 528 MB | Very Slow | High | Old Research |
-| MobileNetV3 | 12 MB | Real-time | High | Newer, but V2 is more compatible |
+| **MobileNetV2** | **14 MB** | **Real-time** | **High** | **Mobile Offline** |
+| ResNet50 | 98 MB | Slow | Very High | Cloud |
+| VGG16 | 528 MB | Very Slow | High | Legacy |
 
-**Judges Pitch**: *"We selected MobileNetV2 because it offers the perfect balance of lightweight architecture (3.5MB quantised) and high accuracy for offline edge deployment in rural areas with low-end devices."*
+**Selection Criteria**: MobileNetV2 was selected for its balance of lightweight architecture (3.5MB quantised) and high accuracy for offline edge deployment.
 
 ## 2. Configuration Parameters Explained
 
